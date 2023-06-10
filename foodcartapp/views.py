@@ -3,8 +3,30 @@ from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
 
 from .models import Order, OrderItem, Product, Restaurant
+
+
+class OrderItemSerializer(ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity']
+
+
+class OrderSerializer(ModelSerializer):
+    products = OrderItemSerializer(many=True, allow_empty=False)
+
+    class Meta:
+        model = Order
+        fields = ['firstname', 'lastname', 'phonenumber', 'address', 'products']
+
+    def create(self, validated_data):
+        products_data = validated_data.pop('products')
+        order = Order.objects.create(**validated_data)
+        for product_data in products_data:
+            OrderItem.objects.create(order=order, **product_data)
+        return order
 
 
 def is_valid_phonenumber(number):
@@ -65,103 +87,8 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    data = request.data
-
-    # validate input data
-    if not all(key in data for key in [
-        'firstname',
-        'lastname',
-        'phonenumber',
-        'address',
-        'products'
-    ]):
-        return Response(
-            {'error': 'Missing required fields'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not isinstance(data['firstname'], str) or not data['firstname']:
-        return Response(
-            {'error': 'Invalid firstname: expected a non-empty string'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not isinstance(data['lastname'], str) or not data['lastname']:
-        return Response(
-            {'error': 'Invalid lastname: expected a non-empty string'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not is_valid_phonenumber(data['phonenumber']):
-        return Response(
-            {'error': 'Invalid phone number'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not isinstance(data['address'], str) or not data['address']:
-        return Response(
-            {'error': 'Invalid address: expected a non-empty string'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not isinstance(data['products'], list) or not data['products']:
-        return Response(
-            {'error': 'Invalid products: expected a non-empty list'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    for item in data['products']:
-        if not isinstance(item, dict) or 'product' not in item or 'quantity' not in item:
-            return Response(
-                {'error': 'Invalid product data'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            item['quantity'] = int(item['quantity'])
-        except ValueError:
-            return Response(
-                {'error': 'Invalid quantity: expected an integer'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if item['quantity'] <= 0:
-            return Response(
-                {'error': 'Invalid quantity: must be greater than 0'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    # create the order
-    try:
-        order = Order.objects.create(
-            first_name=data['firstname'],
-            last_name=data['lastname'],
-            phone_number=data['phonenumber'],
-            address=data['address']
-        )
-    except Exception as e:
-        return Response(
-            {'error': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-    # create the order items
-    for item in data['products']:
-        try:
-            product = Product.objects.get(pk=item['product'])
-            order_item = OrderItem(
-                order=order,
-                product=product,
-                quantity=item['quantity']
-            )
-            order_item.save()
-        except Product.DoesNotExist:
-            return Response(
-                {'error': 'Invalid product id'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    return Response({'success': True}, status=status.HTTP_200_OK)
+    serializer = OrderSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'success': True}, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

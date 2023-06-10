@@ -136,15 +136,15 @@ class Order(models.Model):
         through='OrderItem',
         verbose_name='товары'
     )
-    first_name = models.CharField(
+    firstname = models.CharField(
         'имя',
         max_length=50
     )
-    last_name = models.CharField(
+    lastname = models.CharField(
         'фамилия',
         max_length=50
     )
-    phone_number = PhoneNumberField(
+    phonenumber = PhoneNumberField(
         'номер телефона',
         max_length=20
     )
@@ -162,7 +162,7 @@ class Order(models.Model):
     items_list.short_description = 'Items'
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} - {self.address}"
+        return f"{self.firstname} {self.lastname} - {self.address}"
 
 
 class OrderItem(models.Model):
