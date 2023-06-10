@@ -1,11 +1,21 @@
-from rest_framework import status
+import phonenumbers
 from django.templatetags.static import static
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Order, OrderItem, Product, Restaurant
 
 
+def is_valid_phonenumber(number):
+    try:
+        parsed_number = phonenumbers.parse(number)
+        return phonenumbers.is_valid_number(parsed_number)
+    except phonenumbers.phonenumberutil.NumberParseException:
+        return False
+
+
+@api_view(['GET'])
 def banners_list_api(request):
     # FIXME move data to db?
     return Response([
@@ -27,6 +37,7 @@ def banners_list_api(request):
     ])
 
 
+@api_view(['GET'])
 def product_list_api(request):
     products = Product.objects.select_related('category').available()
 
@@ -66,6 +77,30 @@ def register_order(request):
     ]):
         return Response(
             {'error': 'Missing required fields'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not isinstance(data['firstname'], str) or not data['firstname']:
+        return Response(
+            {'error': 'Invalid firstname: expected a non-empty string'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not isinstance(data['lastname'], str) or not data['lastname']:
+        return Response(
+            {'error': 'Invalid lastname: expected a non-empty string'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not is_valid_phonenumber(data['phonenumber']):
+        return Response(
+            {'error': 'Invalid phone number'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not isinstance(data['address'], str) or not data['address']:
+        return Response(
+            {'error': 'Invalid address: expected a non-empty string'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
