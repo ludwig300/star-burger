@@ -2,13 +2,15 @@ import json
 
 from django.http import JsonResponse
 from django.templatetags.static import static
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-from .models import Product, Order, OrderItem, Restaurant
+from .models import Order, OrderItem, Product, Restaurant
 
 
 def banners_list_api(request):
     # FIXME move data to db?
-    return JsonResponse([
+    return Response([
         {
             'title': 'Burger',
             'src': static('burger.jpg'),
@@ -24,10 +26,7 @@ def banners_list_api(request):
             'src': static('tasty.jpg'),
             'text': 'Food is incomplete without a tasty dessert',
         }
-    ], safe=False, json_dumps_params={
-        'ensure_ascii': False,
-        'indent': 4,
-    })
+    ])
 
 
 def product_list_api(request):
@@ -52,26 +51,11 @@ def product_list_api(request):
             }
         }
         dumped_products.append(dumped_product)
-    return JsonResponse(dumped_products, safe=False, json_dumps_params={
-        'ensure_ascii': False,
-        'indent': 4,
-    })
+    return Response(dumped_products)
 
-
+@api_view(['POST'])
 def register_order(request):
-    try:
-        data = json.loads(request.body.decode())
-    except ValueError:
-        return JsonResponse({
-            'error': 'Invalid JSON',
-        }, status=400)
-    print(data)
-    # try:
-    #     restaurant = Restaurant.objects.get(pk=data['restaurant_id'])
-    # except Restaurant.DoesNotExist:
-    #     return JsonResponse({
-    #         'error': 'Restaurant does not exist',
-    #     }, status=400)
+    data = request.data
 
     # create the order
     order = Order.objects.create(
@@ -92,4 +76,4 @@ def register_order(request):
         )
         order_item.save()
 
-    return JsonResponse({'success': True})
+    return Response({'success': True})
