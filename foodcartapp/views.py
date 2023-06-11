@@ -15,11 +15,21 @@ class OrderItemSerializer(ModelSerializer):
 
 
 class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(many=True, allow_empty=False)
+    products = OrderItemSerializer(
+        many=True,
+        allow_empty=False,
+        write_only=True
+    )
 
     class Meta:
         model = Order
-        fields = ['firstname', 'lastname', 'phonenumber', 'address', 'products']
+        fields = [
+            'firstname',
+            'lastname',
+            'phonenumber',
+            'address',
+            'products'
+        ]
 
     def create(self, validated_data):
         products_data = validated_data.pop('products')
@@ -27,6 +37,12 @@ class OrderSerializer(ModelSerializer):
         for product_data in products_data:
             OrderItem.objects.create(order=order, **product_data)
         return order
+
+
+class ReadOrderSerializer(ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address']
 
 
 def is_valid_phonenumber(number):
@@ -89,6 +105,7 @@ def product_list_api(request):
 def register_order(request):
     serializer = OrderSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response({'success': True}, status=status.HTTP_200_OK)
+        order = serializer.save()
+        read_serializer = ReadOrderSerializer(order)
+        return Response(read_serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
