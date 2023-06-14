@@ -165,6 +165,7 @@ class Order(models.Model):
         max_length=250
     )
     objects = OrderQuerySet.as_manager()
+    comment = models.TextField(blank=True)
 
     class Meta:
         verbose_name = 'заказ'
