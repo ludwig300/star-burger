@@ -131,6 +131,18 @@ class OrderQuerySet(models.QuerySet):
 
 
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('NEW', 'Новый заказ'),
+        ('CONFIRMED', 'Подтверждён'),
+        ('IN_PROGRESS', 'В процессе'),
+        ('DONE', 'Выполнен'),
+    ]
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default='NEW',
+        db_index=True
+    )
     items = models.ManyToManyField(
         Product,
         through='OrderItem',
