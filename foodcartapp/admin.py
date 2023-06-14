@@ -117,9 +117,14 @@ class OrderAdmin(admin.ModelAdmin):
         'firstname',
         'lastname',
         'items_list',
-        'comment'
+        'comment',
+        'registraited_at',
+        'called_at',
+        'delivered_at'
     ]
-
+    readonly_fields = [
+        'registraited_at',
+    ]
     inlines = [
         OrderItemInline
     ]
