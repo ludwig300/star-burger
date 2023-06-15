@@ -132,12 +132,25 @@ class OrderQuerySet(models.QuerySet):
 
 
 class Order(models.Model):
+    class PaymentMethod(models.TextChoices):
+        ELECTRONIC = 'E', 'Электронно'
+        CASH = 'C', 'Наличными'
+        NOT_INDICATED = 'N', 'Не указано'
+
     STATUS_CHOICES = [
         ('NEW', 'Новый заказ'),
         ('CONFIRMED', 'Подтверждён'),
         ('IN_PROGRESS', 'В процессе'),
         ('DONE', 'Выполнен'),
     ]
+
+    payment_method = models.CharField(
+        'способ оплаты',
+        max_length=1,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.NOT_INDICATED,
+        db_index=True
+    )
     status = models.CharField(
         max_length=12,
         choices=STATUS_CHOICES,
