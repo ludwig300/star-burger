@@ -115,6 +115,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'status',
         'firstname',
+        'assigned_restaurant',
         'lastname',
         'items_list',
         'comment',

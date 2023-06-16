@@ -21,24 +21,39 @@
       <th>Телефон</th>
       <th>Адрес доставки</th>
       <th>Комментарий</th>
+      <th>Подходящие рестораны</th>
       <th>Ссылка на админку</th>
     </tr>
-
+    
     {% for order in orders %}
       <tr>
         <td>{{ order.id }}</td>
         <td>{{ order.get_status_display }}</td>
         <td>{{ order.get_payment_method_display }}</td>
-        <td>{{ order.total_price }} руб.</td>
+        <td>{{ order.total_price|default_if_none:'-' }} руб.</td>
         <td>{{ order.firstname }} {{ order.lastname }}</td>
         <td>{{ order.phonenumber }}</td>
         <td>{{ order.address }}</td>
         <td>{{ order.comment }}</td>
+        <td>
+          {% if order.assigned_restaurant %}
+            Готовит: {{ order.assigned_restaurant.name }}
+          {% else %}
+            <details>
+              <summary>Может быть приготовлен ресторанами</summary>
+              {% for restaurant in order.suitable_restaurants %}
+                  <p>{{ restaurant.name }}</p>
+              {% empty %}
+                  <p>Нет подходящих ресторанов</p>
+              {% endfor %}
+            </details>
+          {% endif %}
+        </td>
         <td><a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}">Редактировать</a></td>
       </tr>
     {% empty %}
       <tr>
-        <td colspan="4">Нет заказов для обработки.</td>
+        <td colspan="10">Нет заказов для обработки.</td>
       </tr>
     {% endfor %}
    </table>

@@ -1,6 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import F, Sum
+from django.db.models import F, Prefetch, Sum
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -179,13 +179,20 @@ class Order(models.Model):
         max_length=250
     )
     objects = OrderQuerySet.as_manager()
-    comment = models.TextField(blank=True, default='')
     registraited_at = models.DateTimeField(
         auto_now_add=True,
         db_index=True,
     )
     called_at = models.DateTimeField(blank=True, null=True, db_index=True)
     delivered_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    assigned_restaurant = models.ForeignKey(
+        Restaurant,
+        verbose_name='Назначенный ресторан',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    comment = models.TextField(blank=True, default='')
 
     class Meta:
         verbose_name = 'заказ'
@@ -197,6 +204,23 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.firstname} {self.lastname} - {self.address}"
+
+    @property
+    def suitable_restaurants(self):
+        suitable_restaurants = []
+        restaurants = Restaurant.objects.prefetch_related(
+            Prefetch('menu_items', queryset=RestaurantMenuItem.objects.filter(availability=True))
+        )
+        order_products = self.items.all()
+
+        for restaurant in restaurants:
+            menu_products = [
+                item.product for item in restaurant.menu_items.all()
+            ]
+            if set(order_products).issubset(menu_products):
+                suitable_restaurants.append(restaurant)
+
+        return suitable_restaurants
 
 
 class OrderItem(models.Model):
