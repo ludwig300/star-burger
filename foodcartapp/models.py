@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+import requests
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -284,3 +287,41 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
+
+
+class GeocodeDataManager(models.Manager):
+
+    def fetch_coordinates(self, address):
+        one_week_ago = timezone.now() - timedelta(weeks=1)
+        geodata = self.filter(
+            address=address, updated_at__gte=one_week_ago).first()
+
+        if geodata is not None:
+            return geodata.latitude, geodata.longitude
+
+        base_url = "https://geocode-maps.yandex.ru/1.x"
+        response = requests.get(base_url, params={
+            "geocode": address,
+            "apikey": settings.YANDEX_API_KEY,
+            "format": "json",
+        })
+        response.raise_for_status()
+        found_places = response.json(
+        )['response']['GeoObjectCollection']['featureMember']
+
+        if not found_places:
+            return None
+
+        most_relevant = found_places[0]
+        lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+        self.create(address=address, latitude=lat, longitude=lon)
+        return lat, lon
+
+
+class GeocodeData(models.Model):
+    address = models.CharField(max_length=255, unique=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = GeocodeDataManager()
