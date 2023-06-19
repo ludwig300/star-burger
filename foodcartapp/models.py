@@ -1,7 +1,9 @@
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import F, Prefetch, Sum
 from django.utils import timezone
+from geopy.geocoders import Yandex
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -20,6 +22,10 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True)
 
     class Meta:
         verbose_name = 'ресторан'
@@ -27,6 +33,14 @@ class Restaurant(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        geolocator = Yandex(api_key=settings.YANDEX_API_KEY)
+        location = geolocator.geocode(self.address)
+        if location is not None:
+            self.latitude = location.latitude
+            self.longitude = location.longitude
+        super().save(*args, **kwargs)
 
 
 class ProductQuerySet(models.QuerySet):
@@ -178,6 +192,10 @@ class Order(models.Model):
         'адрес',
         max_length=250
     )
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True)
     objects = OrderQuerySet.as_manager()
     registraited_at = models.DateTimeField(
         auto_now_add=True,
@@ -198,6 +216,14 @@ class Order(models.Model):
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
 
+    def save(self, *args, **kwargs):
+        geolocator = Yandex(api_key=settings.YANDEX_API_KEY)
+        location = geolocator.geocode(self.address)
+        if location is not None:
+            self.latitude = location.latitude
+            self.longitude = location.longitude
+        super().save(*args, **kwargs)
+
     def items_list(self, obj):
         return ", ".join([str(item) for item in obj.items.all()])
     items_list.short_description = 'Items'
@@ -209,7 +235,8 @@ class Order(models.Model):
     def suitable_restaurants(self):
         suitable_restaurants = []
         restaurants = Restaurant.objects.prefetch_related(
-            Prefetch('menu_items', queryset=RestaurantMenuItem.objects.filter(availability=True))
+            Prefetch('menu_items', queryset=RestaurantMenuItem.objects.filter(
+                availability=True))
         )
         order_products = self.items.all()
 

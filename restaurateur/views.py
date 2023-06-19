@@ -1,4 +1,8 @@
+import logging
+
+import requests
 from django import forms
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import user_passes_test
@@ -6,8 +10,12 @@ from django.db.models import Prefetch
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
+from geopy.distance import geodesic
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 
 from foodcartapp.models import Order, OrderItem, Product, Restaurant
+
+logger = logging.getLogger(__name__)
 
 
 class Login(forms.Form):
@@ -69,8 +77,10 @@ def view_products(request):
 
     products_with_restaurant_availability = []
     for product in products:
-        availability = {item.restaurant_id: item.availability for item in product.menu_items.all()}
-        ordered_availability = [availability.get(restaurant.id, False) for restaurant in restaurants]
+        availability = {
+            item.restaurant_id: item.availability for item in product.menu_items.all()}
+        ordered_availability = [availability.get(
+            restaurant.id, False) for restaurant in restaurants]
 
         products_with_restaurant_availability.append(
             (product, ordered_availability)
@@ -92,10 +102,34 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.with_total_price().exclude(status='DONE').prefetch_related(
-        Prefetch('order_items', queryset=OrderItem.objects.select_related('product'))
+        Prefetch('order_items',
+                 queryset=OrderItem.objects.select_related('product'))
     )
+    restaurants = Restaurant.objects.all()
 
+    for order in orders:
+        order_location = (order.longitude, order.latitude)
+        order.restaurants = restaurants
+        for restaurant in order.restaurants:
+            restaurant_location = (restaurant.longitude, restaurant.latitude)
+            if restaurant_location is not None and order_location is not None:
+                try:
+                    restaurant.distance = geodesic(
+                        restaurant_location, order_location).km
+                except GeocoderTimedOut:
+                    restaurant.distance = None
+                    logger.error(
+                        "GeocoderTimedOut occurred, setting distance to None")
+                except GeocoderServiceError:
+                    restaurant.distance = None
+                    logger.error(
+                        "GeocoderServiceError occurred, setting distance to None")
+
+            else:
+                restaurant.distance = None
+
+        order.restaurants = sorted(
+            order.restaurants, key=lambda r: r.distance if r.distance is not None else float('inf'))
     return render(request, template_name='order_items.html', context={
         'orders': orders,
     })
-

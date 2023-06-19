@@ -41,11 +41,11 @@
           {% else %}
             <details>
               <summary>Может быть приготовлен ресторанами</summary>
-              {% for restaurant in order.suitable_restaurants %}
-                  <p>{{ restaurant.name }}</p>
+              {% for restaurant in order.restaurants %}
+               <p>{{ restaurant.name }} - Расстояние: {{ restaurant.distance|floatformat:2 }} км</p>
               {% empty %}
-                  <p>Нет подходящих ресторанов</p>
-              {% endfor %}
+                <p>Нет подходящих ресторанов</p>
+             {% endfor %}
             </details>
           {% endif %}
         </td>
