@@ -1,8 +1,6 @@
 import logging
 
-import requests
 from django import forms
-from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import user_passes_test
@@ -86,10 +84,13 @@ def view_products(request):
             (product, ordered_availability)
         )
 
-    return render(request, template_name="products_list.html", context={
-        'products_with_restaurant_availability': products_with_restaurant_availability,
-        'restaurants': restaurants,
-    })
+    return render(
+        request, template_name="products_list.html",
+        context={
+            'products_with_restaurant_availability': products_with_restaurant_availability,
+            'restaurants': restaurants,
+        }
+    )
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
@@ -102,8 +103,9 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.with_total_price().exclude(status='DONE').prefetch_related(
-        Prefetch('order_items',
-                 queryset=OrderItem.objects.select_related('product'))
+        Prefetch(
+            'order_items',
+            queryset=OrderItem.objects.select_related('product'))
     )
     restaurants = Restaurant.objects.all()
 
@@ -119,11 +121,13 @@ def view_orders(request):
                 except GeocoderTimedOut:
                     restaurant.distance = None
                     logger.error(
-                        "GeocoderTimedOut occurred, setting distance to None")
+                        "GeocoderTimedOut occurred, setting distance to None"
+                    )
                 except GeocoderServiceError:
                     restaurant.distance = None
                     logger.error(
-                        "GeocoderServiceError occurred, setting distance to None")
+                        "GeocoderServiceError occurred, setting distance to None"
+                    )
 
             else:
                 restaurant.distance = None

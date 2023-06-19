@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 
-from .models import Order, OrderItem, Product, Restaurant
+from .models import Order, OrderItem, Product
 
 
 class OrderItemSerializer(ModelSerializer):
