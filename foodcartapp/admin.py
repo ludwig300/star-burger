@@ -142,7 +142,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
-        if "next" in request.GET:
+        if "next" in request.GET and request.GET["next"]:
             next_url = request.GET["next"]
             if url_has_allowed_host_and_scheme(
                 url=next_url,
