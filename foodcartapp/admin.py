@@ -125,12 +125,12 @@ class OrderAdmin(admin.ModelAdmin):
         'lastname',
         'items_list',
         'comment',
-        'registraited_at',
+        'date_registration',
         'called_at',
         'delivered_at'
     ]
     readonly_fields = [
-        'registraited_at',
+        'date_registration',
     ]
     inlines = [
         OrderItemInline

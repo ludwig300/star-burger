@@ -199,7 +199,7 @@ class Order(models.Model):
     longitude = models.DecimalField(
         max_digits=9, decimal_places=6, null=True, blank=True)
     objects = OrderQuerySet.as_manager()
-    registraited_at = models.DateTimeField(
+    date_registration = models.DateTimeField(
         auto_now_add=True,
         db_index=True,
     )
