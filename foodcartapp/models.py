@@ -260,10 +260,6 @@ class OrderItem(models.Model):
         validators=[MinValueValidator(0)]
     )
 
-    def save(self, *args, **kwargs):
-        self.price = self.product.price
-        super().save(*args, **kwargs)
-
     class Meta:
         verbose_name = 'пункт меню заказа'
         verbose_name_plural = 'пункты меню заказа'
