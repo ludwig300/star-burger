@@ -178,11 +178,6 @@ class Order(models.Model):
         default='NEW',
         db_index=True
     )
-    items = models.ManyToManyField(
-        Product,
-        through='OrderItem',
-        verbose_name='товары'
-    )
     firstname = models.CharField(
         'имя',
         max_length=50

@@ -137,7 +137,7 @@ class OrderAdmin(admin.ModelAdmin):
     ]
 
     def items_list(self, obj):
-        return ", ".join([str(item) for item in obj.items.all()])
+        return ", ".join([str(item) for item in obj.order_items.all()])
     items_list.short_description = 'Items'
 
     def response_change(self, request, obj):
