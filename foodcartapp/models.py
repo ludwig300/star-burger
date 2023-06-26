@@ -37,14 +37,6 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
-        geolocator = Yandex(api_key=settings.YANDEX_API_KEY)
-        location = geolocator.geocode(self.address)
-        if location is not None:
-            self.latitude = location.latitude
-            self.longitude = location.longitude
-        super().save(*args, **kwargs)
-
 
 class ProductQuerySet(models.QuerySet):
     def available(self):
@@ -217,14 +209,6 @@ class Order(models.Model):
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
-
-    def save(self, *args, **kwargs):
-        geolocator = Yandex(api_key=settings.YANDEX_API_KEY)
-        location = geolocator.geocode(self.address)
-        if location is not None:
-            self.latitude = location.latitude
-            self.longitude = location.longitude
-        super().save(*args, **kwargs)
 
     def items_list(self, obj):
         return ", ".join([str(item) for item in obj.items.all()])

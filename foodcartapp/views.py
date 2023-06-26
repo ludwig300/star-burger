@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 
-from .models import Order, OrderItem, Product
+from .models import GeocodeData, Order, OrderItem, Product
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -35,6 +35,12 @@ class OrderSerializer(ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         products_data = validated_data.pop('products')
+
+        lat, lon = GeocodeData.objects.fetch_coordinates(validated_data['address'])
+        if lat is not None and lon is not None:
+            validated_data['latitude'] = lat
+            validated_data['longitude'] = lon
+
         order = Order.objects.create(**validated_data)
         for product_data in products_data:
             OrderItem.objects.create(order=order, **product_data)
