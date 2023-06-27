@@ -1,65 +1,14 @@
 import phonenumbers
-from django.db import transaction
+
 from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
-
-from .models import GeocodeData, Order, OrderItem, Product
-
-
-class OrderItemSerializer(ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity']
+from .serializers import OrderSerializer, ReadOrderSerializer
+from .models import Product
 
 
-class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(
-        many=True,
-        allow_empty=False,
-        write_only=True
-    )
 
-    class Meta:
-        model = Order
-        fields = [
-            'firstname',
-            'lastname',
-            'phonenumber',
-            'address',
-            'products'
-        ]
-
-    @transaction.atomic
-    def create(self, validated_data):
-        products_data = validated_data.pop('products')
-
-        lat, lon = GeocodeData.objects.fetch_coordinates(validated_data['address'])
-        if lat is not None and lon is not None:
-            validated_data['latitude'] = lat
-            validated_data['longitude'] = lon
-        else:
-            validated_data['latitude'] = None
-            validated_data['longitude'] = None
-
-        order = Order.objects.create(**validated_data)
-        for product_data in products_data:
-            product = product_data.pop('product')
-            OrderItem.objects.create(
-                order=order,
-                price=product.price,
-                product=product,
-                **product_data
-            )
-        return order
-
-
-class ReadOrderSerializer(ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address']
 
 
 def is_valid_phonenumber(number):
