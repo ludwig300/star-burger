@@ -62,4 +62,3 @@ def register_order(request):
     order = serializer.save()
     read_serializer = ReadOrderSerializer(order)
     return Response(read_serializer.data, status=status.HTTP_200_OK)
-

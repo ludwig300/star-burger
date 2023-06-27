@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 from datetime import timedelta
@@ -8,6 +9,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import F, Prefetch, Sum
 from django.utils import timezone
+from geopy.distance import geodesic
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from phonenumber_field.modelfields import PhoneNumberField
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.INFO)
@@ -147,6 +150,37 @@ class OrderQuerySet(models.QuerySet):
                 F('order_items__price') * F('order_items__quantity')
             )
         )
+    def get_not_done_orders_with_total_price(self):
+        return self.with_total_price().exclude(status='DONE')
+
+    def get_orders_with_restaurants(self, restaurants):
+        for order in self:
+            order_location = (order.longitude, order.latitude)
+            order.restaurants = []
+            for restaurant in restaurants:
+                restaurant_location = (restaurant.longitude, restaurant.latitude)
+                restaurant_copy = copy.deepcopy(restaurant)
+                if restaurant_location is not None and order_location is not None:
+                    try:
+                        restaurant_copy.distance = geodesic(
+                            restaurant_location, order_location).km
+                    except GeocoderTimedOut:
+                        restaurant_copy.distance = None
+                        logger.error(
+                            "GeocoderTimedOut occurred, setting distance to None"
+                        )
+                    except GeocoderServiceError:
+                        restaurant_copy.distance = None
+                        logger.error(
+                            "GeocoderServiceError occurred, setting distance to None"
+                        )
+                else:
+                    restaurant_copy.distance = None
+                order.restaurants.append(restaurant_copy)
+            order.restaurants = sorted(
+                order.restaurants, key=lambda r: r.distance if r.distance is not None else float('inf'))
+        return self
+
 
 
 class Order(models.Model):
