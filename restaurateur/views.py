@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from django import forms
@@ -111,26 +112,28 @@ def view_orders(request):
 
     for order in orders:
         order_location = (order.longitude, order.latitude)
-        order.restaurants = restaurants
-        for restaurant in order.restaurants:
+        order.restaurants = []
+        for restaurant in restaurants:
             restaurant_location = (restaurant.longitude, restaurant.latitude)
+            restaurant_copy = copy.deepcopy(restaurant)
             if restaurant_location is not None and order_location is not None:
                 try:
-                    restaurant.distance = geodesic(
+                    restaurant_copy.distance = geodesic(
                         restaurant_location, order_location).km
                 except GeocoderTimedOut:
-                    restaurant.distance = None
+                    restaurant_copy.distance = None
                     logger.error(
                         "GeocoderTimedOut occurred, setting distance to None"
                     )
                 except GeocoderServiceError:
-                    restaurant.distance = None
+                    restaurant_copy.distance = None
                     logger.error(
                         "GeocoderServiceError occurred, setting distance to None"
                     )
-
             else:
-                restaurant.distance = None
+                restaurant_copy.distance = None
+
+            order.restaurants.append(restaurant_copy)
 
         order.restaurants = sorted(
             order.restaurants, key=lambda r: r.distance if r.distance is not None else float('inf'))
