@@ -1,3 +1,5 @@
+import json
+import logging
 from datetime import timedelta
 
 import requests
@@ -6,8 +8,11 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import F, Prefetch, Sum
 from django.utils import timezone
-from geopy.geocoders import Yandex
 from phonenumber_field.modelfields import PhoneNumberField
+
+logging.basicConfig(filename='log.txt', filemode='a', level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 
 class Restaurant(models.Model):
@@ -278,19 +283,26 @@ class GeocodeDataManager(models.Manager):
         if geodata is not None:
             return geodata.latitude, geodata.longitude
 
-        base_url = "https://geocode-maps.yandex.ru/1.x"
-        response = requests.get(base_url, params={
-            "geocode": address,
-            "apikey": settings.YANDEX_API_KEY,
-            "format": "json",
-        })
-        response.raise_for_status()
-        found_places = response.json(
-        )['response']['GeoObjectCollection']['featureMember']
+        try:
+            base_url = "https://geocode-maps.yandex.ru/1.x"
+            response = requests.get(base_url, params={
+                "geocode": address,
+                "apikey": settings.YANDEX_API_KEY,
+                "format": "json",
+            })
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Problem with request: {e}")
+            return None
+
+        try:
+            found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+        except (KeyError, json.JSONDecodeError) as e:
+            logger.error(f"Problem parsing response JSON: {e}")
+            return None
 
         if not found_places:
             return None
-
         most_relevant = found_places[0]
         lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
         self.create(address=address, latitude=lat, longitude=lon)

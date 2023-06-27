@@ -40,13 +40,17 @@ class OrderSerializer(ModelSerializer):
         if lat is not None and lon is not None:
             validated_data['latitude'] = lat
             validated_data['longitude'] = lon
+        else:
+            validated_data['latitude'] = None
+            validated_data['longitude'] = None
 
         order = Order.objects.create(**validated_data)
         for product_data in products_data:
-            product = Product.objects.get(pk=product_data['product_id'])
+            product = product_data.pop('product')
             OrderItem.objects.create(
-                order=order, 
+                order=order,
                 price=product.price,
+                product=product,
                 **product_data
             )
         return order
