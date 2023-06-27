@@ -1,22 +1,10 @@
-import phonenumbers
-
 from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import OrderSerializer, ReadOrderSerializer
+
 from .models import Product
-
-
-
-
-
-def is_valid_phonenumber(number):
-    try:
-        parsed_number = phonenumbers.parse(number)
-        return phonenumbers.is_valid_number(parsed_number)
-    except phonenumbers.phonenumberutil.NumberParseException:
-        return False
+from .serializers import OrderSerializer, ReadOrderSerializer
 
 
 @api_view(['GET'])
