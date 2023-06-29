@@ -143,7 +143,7 @@ class OrderAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
         next_url = request.GET.get("next")
-        
+
         if not next_url:
             return response
 

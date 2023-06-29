@@ -1,8 +1,12 @@
+import logging
+
 from django.db import transaction
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework.serializers import ModelSerializer, ValidationError
 
 from .models import GeocodeData, Order, OrderItem
+
+logger = logging.getLogger(__name__)
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -35,7 +39,7 @@ class OrderSerializer(ModelSerializer):
 
         lat, lon = GeocodeData.objects.fetch_coordinates(validated_data['address'])
         if lat is None or lon is None:
-            raise ValidationError("Could not determine the coordinates for the given address.")
+            logger.warning("Could not determine the coordinates for the given address: %s", validated_data['address'])
 
         validated_data['latitude'] = lat
         validated_data['longitude'] = lon
