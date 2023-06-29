@@ -142,12 +142,16 @@ class OrderAdmin(admin.ModelAdmin):
 
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
-        if "next" in request.GET and request.GET["next"]:
-            next_url = request.GET["next"]
-            if url_has_allowed_host_and_scheme(
-                url=next_url,
-                allowed_hosts={request.get_host()},
-                require_https=request.is_secure()
-            ):
-                return HttpResponseRedirect(next_url)
+        next_url = request.GET.get("next")
+        
+        if not next_url:
+            return response
+
+        if url_has_allowed_host_and_scheme(
+            url=next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure()
+        ):
+            return HttpResponseRedirect(next_url)
+
         return response
