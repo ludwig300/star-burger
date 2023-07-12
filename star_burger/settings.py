@@ -86,10 +86,20 @@ WSGI_APPLICATION = 'star_burger.wsgi.application'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+POSTGRES_NAME = env('POSTGRES_NAME')
+POSTGRES_USER = env('POSTGRES_USER')
+POSTGRES_PASSWORD = env('POSTGRES_PASSWORD')
+POSTGRES_HOST = env('POSTGRES_HOST')
+POSTGRES_PORT = env('POSTGRES_PORT')
+
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:////{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
-    )
+        default=f'postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_NAME}'
+    ),
+    'TEST': {
+        'CHARSET': 'utf8',
+        'COLLATION': 'utf8_general_ci',
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [

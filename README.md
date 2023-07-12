@@ -68,7 +68,7 @@ SECRET_KEY=django-insecure-0if40nf4nf93n4
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
 
 ```sh
-python manage.py migrate
+python3 manage.py migrate
 ```
 
 Запустите сервер:
@@ -155,6 +155,11 @@ Parcel будет следить за файлами в каталоге `bundle
 - `YANDEX_API_KEY` — получите API ключ в [кабинете разработчика](https://developer.tech.yandex.ru/)
 - `ROLLBAR_TOKEN` — создацте проект и получите токен на [Rollbar](https://rollbar.com/)
 - `DJANGO_ENV` — установите название окружения для Rollbar. По умолчанию `production`
+- `POSTGRES_NAME` — Имя вашей PostgreSQL базы данных.
+- `POSTGRES_USER` — Имя пользователя для вашей PostgreSQL базы данных.
+- `POSTGRES_PASSWORD` — Пароль для указанного пользователя PostgreSQL.
+- `POSTGRES_HOST` — Адрес хоста, на котором запущен ваш сервер PostgreSQL.
+- `POSTGRES_PORT` — Порт, на котором работает ваш сервер PostgreSQL.
 
 ## Цели проекта
 
