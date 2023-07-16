@@ -6,7 +6,7 @@ set -Eeuo pipefail
 cd /opt/star-burger/
 source venv/bin/activate
 git pull origin master
-revision=$(git rev-parse HEAD)
+revision=$(git rev-parse --short HEAD)
 pip install -r requirements.txt
 npm ci --include=dev
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
