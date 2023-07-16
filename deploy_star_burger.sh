@@ -5,6 +5,7 @@ ROLLBAR_TOKEN=your_rollbar_token
 set -Eeuo pipefail
 cd /opt/star-burger/
 source venv/bin/activate
+git reset --hard HEAD
 git pull origin master
 revision=$(git rev-parse --short HEAD)
 pip install -r requirements.txt
