@@ -153,13 +153,14 @@ Parcel будет следить за файлами в каталоге `bundle
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
 - `YANDEX_API_KEY` — получите API ключ в [кабинете разработчика](https://developer.tech.yandex.ru/)
-- `ROLLBAR_TOKEN` — создацте проект и получите токен на [Rollbar](https://rollbar.com/)
+- `ROLLBAR_TOKEN` (опционально) — создацте проект и получите токен на [Rollbar](https://rollbar.com/)
 - `DJANGO_ENV` — установите название окружения для Rollbar. По умолчанию `production`
-- `POSTGRES_NAME` — Имя вашей PostgreSQL базы данных.
-- `POSTGRES_USER` — Имя пользователя для вашей PostgreSQL базы данных.
-- `POSTGRES_PASSWORD` — Пароль для указанного пользователя PostgreSQL.
-- `POSTGRES_HOST` — Адрес хоста, на котором запущен ваш сервер PostgreSQL.
-- `POSTGRES_PORT` — Порт, на котором работает ваш сервер PostgreSQL.
+- `DB_URL='postgres://user:password@host:port/database'`
+- `database` — Имя вашей PostgreSQL базы данных.
+- `user` — Имя пользователя для вашей PostgreSQL базы данных.
+- `password` — Пароль для указанного пользователя PostgreSQL.
+- `host` — Адрес хоста, на котором запущен ваш сервер PostgreSQL.
+- `port` — Порт, на котором работает ваш сервер PostgreSQL.
 
 ## Скрипт для деплоя приложения Star Burger
 
