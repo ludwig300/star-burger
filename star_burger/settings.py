@@ -1,6 +1,5 @@
 import os
 
-import dj_database_url
 import rollbar
 from environs import Env
 
@@ -13,7 +12,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', False)
-ROLLBAR_TOKEN = env('ROLLBAR_TOKEN')
+ROLLBAR_TOKEN = env('ROLLBAR_TOKEN', default=None)
 DJANGO_ENV = env('DJANGO_ENV', 'production')
 YANDEX_API_KEY = env('YANDEX_API_KEY')
 
@@ -86,16 +85,8 @@ WSGI_APPLICATION = 'star_burger.wsgi.application'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-POSTGRES_NAME = env('POSTGRES_NAME')
-POSTGRES_USER = env('POSTGRES_USER')
-POSTGRES_PASSWORD = env('POSTGRES_PASSWORD')
-POSTGRES_HOST = env('POSTGRES_HOST')
-POSTGRES_PORT = env('POSTGRES_PORT')
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f'postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_NAME}'
-    ),
+    'default': env.dj_db_url('DB_URL', default='postgres://localhost'),
     'TEST': {
         'CHARSET': 'utf8',
         'COLLATION': 'utf8_general_ci',
@@ -140,11 +131,10 @@ STATICFILES_DIRS = [
 ]
 
 
-ROLLBAR = {
-    'access_token': ROLLBAR_TOKEN,
-    'environment': DJANGO_ENV,
-    'code_version': '1.0',
-    'root': BASE_DIR,
-}
-
-rollbar.init(**ROLLBAR)
+if ROLLBAR_TOKEN:
+    rollbar.init(
+        access_token=ROLLBAR_TOKEN,
+        environment=DJANGO_ENV,
+        root=BASE_DIR,
+        code_version='1.0'
+    )
